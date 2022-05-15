@@ -1,0 +1,11 @@
+{
+  "name": "my-lookout",
+  "version": "0.1.0",
+  "description": "My lookout for things outside my door",
+  "main": "index.js",
+  "author": "Jay Hogan <seeker136@gmail.com>",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.18.1"
+  }
+}
