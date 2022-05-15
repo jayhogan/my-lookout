@@ -1,6 +1,40 @@
 const express = require('express');
-const PORT = process.env.PORT || 5000;
+const camera = require('./camera');
+const detector = require('./detector');
+
+const PORT = process.env.PORT || 5001;
+
+async function lookout(_, res) {
+  const imageBuffer = await camera.takePicture(process.env.CAMERA_ID);
+  if (imageBuffer) {
+    const labels = await detector.labelImage(imageBuffer);
+    res.json(labels);
+  } else {
+    res.json({ error: "imageBuffer is null"});
+  }
+}
+
+async function checkForBus(_, res) {
+  const imageBuffer = await camera.takePicture(process.env.CAMERA_ID);
+  if (!imageBuffer) {
+    return res.send('Image is null');
+  }
+
+  const labels = await detector.labelImage(imageBuffer);
+  const found = labels
+    .filter(isBus)
+    .map(label => `${label.Name}=[${label.Confidence}]`);
+
+  res.send(found.length ? found.join('\n') : 'No bus found');
+}
+
+function isBus(label) {
+  const token = label.Name.toLowerCase();
+  return token === 'school bus' || token == 'bus';
+}
 
 express()
-  .get('/', (req, res) => res.send({ foo: 'bar' }))
-  .listen(PORT, () => console.log(`Listening on ${ PORT }`))
+  .get('/', (_, res) => res.send({ foo: 'bar' }))
+  .get('/lookout', lookout)
+  .get('/check-for-bus', checkForBus)
+  .listen(PORT, () => console.log(`Listening on ${ PORT }`));
