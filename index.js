@@ -1,6 +1,7 @@
 const express = require('express');
 const camera = require('./camera');
 const detector = require('./detector');
+const email = require('./email');
 
 const PORT = process.env.PORT || 5001;
 
@@ -25,7 +26,15 @@ async function checkForBus(_, res) {
     .filter(isBus)
     .map(label => `${label.Name}=[${label.Confidence}]`);
 
-  res.send(found.length ? found.join('\n') : 'No bus found');
+  if (found.length) {
+    const to = process.env.BUS_EMAILS.split(',');
+    email.sendBusEmail(to, imageBuffer).catch(err => {
+      console.error(err);
+    });
+    res.send(found.join('\n'));
+  } else {
+    res.send('No bus found');
+  }
 }
 
 function isBus(label) {
